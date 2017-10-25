@@ -29,16 +29,27 @@ const addProp = (parent, prop, value) => {
 }
 
 // example
+function updateAmounts () {
+  Array.from({ length: state.data.length }, (v, k) => k + 1).map((r) => {
+    const rowNumber = r - 1
+    const last = state.data.length - 1
+    if (rowNumber !== last) {
+      state.data[rowNumber][3] = state.data[rowNumber][1] * state.data[rowNumber][2]
+    }
+    state.data[last][3] = state.data.slice(0, last).reduce((sum, row) => sum + row[3])
+  })
+}
+
 const state = {}
-state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', '', '', 44]].map(row => row.reduce((a, e) => a.concat(new Value(e)), []))
+state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', '', '', 44]].map(row => row.reduce((a, e) => a.concat(new Value(e, '', [updateAmounts])), []))
 
-console.log(state)
-
-function getRowHtml(row) {
+function getRowHtml (row) {
   return '<tr>' + row.map(e => e.value).reduce((sum, e) => sum + '<td> <input value=' + e + '></input></td>', '') + '</tr>'
 }
 
-document.getElementById('table').innerHTML = '<tr> <th> Name </th> <th> Rate </th><th> Quantity </th><th> Amount </th></tr>' +
-      state.data.map(getRowHtml).reduce((sum, e) => sum + '<tr>' + e + '</tr>')
-
-// set up subscribers
+function updateView () {
+  document.getElementById('table').innerHTML = '<tr> <th> Name </th> <th> Rate </th><th> Quantity </th><th> Amount </th></tr>' +
+    state.data.map(getRowHtml).reduce((sum, e) => sum + '<tr>' + e + '</tr>')
+}
+console.log(state)
+updateView()
