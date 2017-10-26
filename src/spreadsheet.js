@@ -29,40 +29,58 @@ const addProp = (parent, prop, value) => {
 }
 
 // example
-function readValues (id) {
-  
-}
-
-function updateAmounts () {
-  Array.from({ length: state.data.length }, (v, k) => k).map((r) => {
-    const last = state.data.length - 1
-    if (r !== last) {
-      state.data[r][3] = state.data[r][1] * state.data[r][2]
-    }
-    state.data[last][3] = state.data.slice(0, last).reduce((sum, row) => sum + row[3])
-  })
-}
-
 const state = {}
-state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', 9, 14, 44]].map(row => row.reduce((a, e) => a.concat(new Value(e, '', [updateAmounts])), []))
+state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', 9, 14, 44]]
+
+for (let r = 0; r < state.data.length; r++) {
+  for (let c = 0; c < 4; c++) {
+    state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)])
+  }
+}
+
+function toId (r, c) {
+  return r * state.data.length + c
+}
+
+function readInput (r, c) {
+  state.data[r][c].value = document.getElementById(toId(r, c)).value
+  updateAmount(r, c)
+}
+
+function updateAmount (r, c) {
+  const last = state.data.length - 1
+  state.data[r][3].value = state.data[r][1].value * state.data[r][2].value
+  state.data[last][c].value = state.data.slice(0, last).reduce((sum, row) => sum + parseInt(row[c].value), 0)
+  state.data[last][3].value = state.data.slice(0, last).reduce((sum, row) => sum + parseInt(row[3].value), 0)
+  updateView(r, c)
+}
 
 function getRowHtml (r) {
   const row = state.data[r]
   if (state.data.length - 1 !== r) {
     return '<tr><td>' + row[0].value + '</td>' +
-    '<td><input onkeyup="readFromInput(r, 1)" value=' + row[1].value + '></input></td>' +
-    '<td><input onkeyup="readFromInput(r, 2)" value=' + row[2].value + '></input></td>' +
-      '<td>' + row[3].value + '</td></tr>'
+      '<td><input onkeyup="readInput(' + r + ', 1)" id="' + toId(r, 1) +
+      '" value=' + row[1].value + '></input></td>' +
+      '<td><input onkeyup="readInput(' + r + ', 2)" id="' + toId(r, 2) +
+      '" value=' + row[2].value + '></input></td>' +
+      '<td id="' + (r * state.data.length + 3) + '">' + row[3].value + '</td></tr>'
   }
   return '<tr><td>' + row[0].value + '</td>' +
-    '<td>' + row[1].value + '</td>' +
-    '<td>' + row[2].value + '</td>' +
-    '<td>' + row[3].value + '</td></tr>'
+    '<td id="' + toId(r, 1) + '">' + row[1].value + '</td>' +
+    '<td id="' + toId(r, 2) + '">' + row[2].value + '</td>' +
+    '<td id="' + toId(r, 3) + '">' + row[3].value + '</td></tr>'
 }
 
-function updateView () {
-  document.getElementById('table').innerHTML = '<tr> <th> Name </th> <th> Rate </th><th> Quantity </th><th> Amount </th></tr>' +
-    Array.from({ length: state.data.length }, (v, k) => k).reduce((sum, r) => sum + getRowHtml(r), '')
+function updateView (r, c) {
+  if (r === undefined) {
+    document.getElementById('table').innerHTML = '<tr> <th> Name </th> <th> Rate </th><th> Quantity </th><th> Amount </th></tr>' +
+      Array.from({ length: state.data.length }, (v, k) => k).reduce((sum, r) => sum + getRowHtml(r), '')
+  } else {
+    const last = state.data.length - 1
+    document.getElementById(toId(r, 3)).innerHTML = state.data[r][3].value
+    document.getElementById(toId(last, c)).innerHTML = state.data[last][c].value
+    document.getElementById(toId(last, 3)).innerHTML = state.data[last][3].value
+  }
 }
 
 updateView()
