@@ -1,8 +1,9 @@
 class Value {
-  constructor (value, prev = null, subscribers = []) {
-    this._value = String(value || null)
+  constructor (value = null, prev = null, subscribers = [], defaultValue = '') {
+    this._value = value
     this.prev = prev
     this.subscribers = subscribers
+    this.defaultValue = defaultValue
   }
 
   get value () {
@@ -12,8 +13,8 @@ class Value {
   set value (value) {
     state.prev = JSON.parse(JSON.stringify(state))
     this.prev = this._value
-    this._value = value
-    this.subscribers.map(f => f())
+    this._value = value || this.defaultValue
+    this.subscribers.forEach(f => f())
   }
 
   subscribe (f) {
@@ -21,29 +22,13 @@ class Value {
   }
 }
 
-const addProp = (parent, prop, value) => {
-  var val = new Value(value, null)
-  Object.defineProperty(parent, prop, {
-    get: function () { return val.value },
-    set: function (v) {
-      val.value = v
-    }
-  })
-}
-
 // example
 const state = {}
-state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', 9, 14, 44]]
-
-for (let r = 0; r < state.data.length; r++) {
-  for (let c = 0; c < 4; c++) {
-    if (r !== state.data.length - 1 && c !== 3) {
-      state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)], state)
-    } else {
-      state.data[r][c] = new Value(state.data[r][c], '', [], state)
-    }
-  }
-}
+const data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', 9, 14, 44]]
+state.data = data.map((row, r) => row.map((val, c) => {
+  const subs = (r !== data.length - 1 && c !== 3) ? [() => updateAmount(r, c)] : []
+  return new Value(data[r][c], '', subs, 0)
+}))
 
 function toId (r, c) {
   return r * state.data.length + c
