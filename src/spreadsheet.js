@@ -1,8 +1,8 @@
 class Value {
-  constructor (value, prev, subscribers) {
+  constructor (value, prev = null, subscribers = []) {
     this._value = String(value || null)
-    this.prev = null
-    this.subscribers = subscribers ? [...subscribers] : []
+    this.prev = prev
+    this.subscribers = subscribers
   }
 
   get value () {
@@ -10,6 +10,8 @@ class Value {
   }
 
   set value (value) {
+    state.prev = JSON.parse(JSON.stringify(state))
+    this.prev = this._value
     this._value = value
     this.subscribers.map(f => f())
   }
@@ -36,9 +38,9 @@ state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['t
 for (let r = 0; r < state.data.length; r++) {
   for (let c = 0; c < 4; c++) {
     if (r !== state.data.length - 1 && c !== 3) {
-      state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)])
+      state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)], state)
     } else {
-      state.data[r][c] = new Value(state.data[r][c], '')
+      state.data[r][c] = new Value(state.data[r][c], '', [], state)
     }
   }
 }
@@ -49,6 +51,7 @@ function toId (r, c) {
 
 function readInput (r, c) {
   state.data[r][c].value = document.getElementById(toId(r, c)).value
+  console.log(state.prev.prev.prev.prev)
 }
 
 function updateAmount (r, c) {
