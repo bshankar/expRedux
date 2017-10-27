@@ -11,6 +11,7 @@ class Value {
 
   set value (value) {
     this._value = value
+    this.subscribers.map(f => f())
   }
 
   subscribe (f) {
@@ -34,7 +35,11 @@ state.data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['t
 
 for (let r = 0; r < state.data.length; r++) {
   for (let c = 0; c < 4; c++) {
-    state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)])
+    if (r !== state.data.length - 1 && c !== 3) {
+      state.data[r][c] = new Value(state.data[r][c], '', [() => updateAmount(r, c)])
+    } else {
+      state.data[r][c] = new Value(state.data[r][c], '')
+    }
   }
 }
 
@@ -44,7 +49,6 @@ function toId (r, c) {
 
 function readInput (r, c) {
   state.data[r][c].value = document.getElementById(toId(r, c)).value
-  updateAmount(r, c)
 }
 
 function updateAmount (r, c) {
