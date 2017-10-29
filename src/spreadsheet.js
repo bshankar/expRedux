@@ -1,9 +1,10 @@
 class Value {
-  constructor (value = null, prev = null, subscribers = [], defaultValue = '') {
+  constructor (value = null, prev = null, subscribers = [], defaultValue = '', loc = []) {
     this._value = value
     this.prev = prev
     this.subscribers = subscribers
     this.defaultValue = defaultValue
+    this.loc = loc
   }
 
   get value () {
@@ -11,7 +12,7 @@ class Value {
   }
 
   set value (value) {
-    state.prev = {...state}
+    storePreviousState(this)
     this.prev = this._value
     this._value = value || this.defaultValue
     this.subscribers.forEach(f => f())
@@ -22,10 +23,16 @@ class Value {
   }
 }
 
+function storePreviousState (valueObj) {
+  const prevData = state.data.map((row) => row.map((v) => v))
+  prevData[valueObj.loc[0]][valueObj.loc[1]] = new Value(valueObj.value, valueObj.prev, valueObj.subscribers, valueObj.defaultValue, valueObj.loc)
+  state.prev = {data: prevData, prev: state.prev}
+}
+
 // example
 const state = {}
 const data = [['rocks', 1, 2, 2], ['pebbles', 5, 3, 15], ['gems', 3, 9, 27], ['total', 9, 14, 44]]
-state.data = data.map((row, r) => row.map((val, c) => new Value(data[r][c], '', [], 0)))
+state.data = data.map((row, r) => row.map((val, c) => new Value(data[r][c], '', [], 0, [r, c])))
 state.data.forEach((row, r) => row.forEach((val, c) => {
   const lastR = state.data.length - 1
   const lastC = state.data[0].length - 1
